@@ -11,7 +11,6 @@ async function getCommerceId() {
     return parseInt(session.user.id);
 }
 
-// POST /api/debts - Crear una nueva deuda (y posiblemente un nuevo cliente)
 export async function POST(request: Request) {
     const comercioId = await getCommerceId();
     if (!comercioId) {
@@ -21,36 +20,40 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
         const {
-            dni, firstName, lastName, email, phone, // Datos del cliente
-            amount, description // Datos de la deuda
+            dni, firstName, lastName, email, phone,
+            amount, description
         } = body;
         
         if (!dni || !firstName || !lastName || !amount || !description) {
             return NextResponse.json({ error: 'Todos los campos del cliente y la deuda son requeridos.' }, { status: 400 });
         }
 
-        // Usamos `upsert` para crear el cliente si no existe, o conectarlo si ya existe por su DNI.
-        const debt = await prisma.debt.create({
-            data: {
-                amount: parseFloat(amount),
-                description,
-                comercioId: comercioId,
-                client: {
-                    connectOrCreate: {
-                        where: { dni: dni },
-                        create: {
-                            dni,
-                            firstName,
-                            lastName,
-                            email,
-                            phone,
-                        },
-                    },
+        const newDebt = await prisma.$transaction(async (tx) => {
+            const client = await tx.client.upsert({
+                where: { dni: dni },
+                update: {}, // No actualizamos nada si ya existe
+                create: {
+                    dni,
+                    firstName,
+                    lastName,
+                    email,
+                    phone,
                 },
-            },
+            });
+
+            const debt = await tx.debt.create({
+                data: {
+                    amount: parseFloat(amount),
+                    description,
+                    comercioId: comercioId,
+                    clientId: client.id, // Enlazamos con el ID del cliente
+                },
+            });
+            
+            return debt;
         });
 
-        return NextResponse.json(debt, { status: 201 });
+        return NextResponse.json(newDebt, { status: 201 });
 
     } catch (error) {
         console.error("Error al crear la deuda:", error);
