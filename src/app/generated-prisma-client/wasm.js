@@ -169,7 +169,7 @@ const config = {
       "fromEnvVar": null
     },
     "config": {
-      "engineType": "library"
+      "engineType": "binary"
     },
     "binaryTargets": [
       {
@@ -193,6 +193,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -201,8 +202,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// Define database connection via the `DATABASE_URL` env var\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// Define custom output path for generated Prisma Client\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/app/generated-prisma-client\"\n}\n\nmodel User {\n  id        Int      @id @default(autoincrement())\n  email     String   @unique\n  name      String\n  password  String\n  cuit      String?  @unique\n  role      Role     @default(COMERCIO)\n  debts     Debt[]\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel Client {\n  id        Int      @id @default(autoincrement())\n  dni       String   @unique\n  firstName String\n  lastName  String\n  email     String?  @unique\n  phone     String?\n  debts     Debt[]\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel Debt {\n  id          Int        @id @default(autoincrement())\n  amount      Float\n  description String\n  status      DebtStatus @default(PENDING)\n  comercioId  Int\n  comercio    User       @relation(fields: [comercioId], references: [id])\n  clientId    Int\n  client      Client     @relation(fields: [clientId], references: [id])\n  createdAt   DateTime   @default(now())\n  updatedAt   DateTime   @updatedAt\n}\n\nenum Role {\n  ADMIN\n  COMERCIO\n}\n\nenum DebtStatus {\n  PENDING\n  PAID\n}\n",
-  "inlineSchemaHash": "5b543ee2d0223b63d157f8062c451aee5c0f00853477d1a78697729aaf9bf1a4",
+  "inlineSchema": "// Define database connection via the `DATABASE_URL` env var\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// Define custom output path for generated Prisma Client\ngenerator client {\n  provider   = \"prisma-client-js\"\n  output     = \"../src/app/generated-prisma-client\"\n  engineType = \"binary\"\n}\n\nmodel User {\n  id        Int      @id @default(autoincrement())\n  email     String   @unique\n  name      String\n  password  String\n  cuit      String?  @unique\n  role      Role     @default(COMERCIO)\n  debts     Debt[]\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel Client {\n  id        Int      @id @default(autoincrement())\n  dni       String   @unique\n  firstName String\n  lastName  String\n  email     String?  @unique\n  phone     String?\n  debts     Debt[]\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel Debt {\n  id          Int        @id @default(autoincrement())\n  amount      Float\n  description String\n  status      DebtStatus @default(PENDING)\n  comercioId  Int\n  comercio    User       @relation(fields: [comercioId], references: [id])\n  clientId    Int\n  client      Client     @relation(fields: [clientId], references: [id])\n  createdAt   DateTime   @default(now())\n  updatedAt   DateTime   @updatedAt\n}\n\nenum Role {\n  ADMIN\n  COMERCIO\n}\n\nenum DebtStatus {\n  PENDING\n  PAID\n}\n",
+  "inlineSchemaHash": "550fd1844d9fa3bbd82ac88d5252a61dcdf3de262d006107fb575f9a980d07df",
   "copyEngine": true
 }
 config.dirname = '/'
