@@ -6,10 +6,13 @@ import { PrismaClient } from '@/app/generated-prisma-client';
 // Learn more: https://pris.ly/d/help/next-js-best-practices
 
 const prismaClientSingleton = () => {
+  const databaseUrl = process.env.OVERRIDE_DATABASE_URL || process.env.DATABASE_URL;
+  console.log(`--- PRISMA DIAGNOSTIC --- Intentando usar URL que empieza con: ${databaseUrl ? databaseUrl.substring(0, 40) : 'URL NO ENCONTRADA'}`);
+
   return new PrismaClient({
     datasources: {
       db: {
-        url: process.env.OVERRIDE_DATABASE_URL || process.env.DATABASE_URL,
+        url: databaseUrl,
       },
     },
   });
