@@ -1,5 +1,4 @@
 import { PrismaClient } from '@/app/generated-prisma-client';
-import { withAccelerate } from '@prisma/extension-accelerate';
 
 // PrismaClient is attached to the `global` object in development to prevent
 // exhausting your database connection limit.
