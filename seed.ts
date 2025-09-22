@@ -27,6 +27,27 @@ async function main() {
     console.log(`El usuario administrador ya existe.`);
   }
 
+  const comercioEmail = 'comercio@veraz.com';
+  let comercio = await prisma.user.findUnique({
+    where: { email: comercioEmail },
+  });
+
+  if (!comercio) {
+    const hashedPassword = await bcrypt.hash('comercio2300', 10);
+    comercio = await prisma.user.create({
+      data: {
+        email: comercioEmail,
+        name: 'Comercio',
+        password: hashedPassword,
+        cuit: '30-12345678-9',
+        role: Role.COMERCIO,
+      },
+    });
+    console.log(`Usuario de comercio creado: ${comercio.email}`);
+  } else {
+    console.log(`El usuario de comercio ya existe.`);
+  }
+
   console.log(`Sembrado de datos finalizado.`);
 }
 
