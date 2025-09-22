@@ -14,15 +14,30 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        console.log('--- Iniciando autorización en Vercel ---');
         if (!credentials?.email || !credentials?.password) {
+          console.log('Error: Faltan credenciales.');
           return null;
         }
+        console.log(`Intentando encontrar usuario con email: ${credentials.email}`);
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
 
-        if (user && await bcrypt.compare(credentials.password, user.password)) {
+        if (!user) {
+          console.log('Resultado: Usuario no encontrado en la base de datos.');
+          return null;
+        }
+        
+        console.log(`Usuario encontrado: ${user.name}. Comparando contraseñas...`);
+        
+        const passwordMatch = await bcrypt.compare(credentials.password, user.password);
+        
+        console.log(`Resultado de la comparación de contraseñas: ${passwordMatch}`);
+
+        if (passwordMatch) {
+          console.log('Éxito: Contraseña correcta. Autorización concedida.');
           return {
             id: user.id.toString(),
             name: user.name,
@@ -30,6 +45,7 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
           };
         } else {
+          console.log('Error: Contraseña incorrecta.');
           return null;
         }
       },
@@ -42,7 +58,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.role = user.role!;
       }
       return token;
     },
