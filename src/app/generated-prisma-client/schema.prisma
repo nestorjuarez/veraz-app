@@ -1,0 +1,58 @@
+// Define database connection via the `DATABASE_URL` env var
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Define custom output path for generated Prisma Client
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/app/generated-prisma-client"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String
+  cuit      String?  @unique
+  role      Role     @default(COMERCIO)
+  debts     Debt[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id        Int      @id @default(autoincrement())
+  dni       String   @unique
+  firstName String
+  lastName  String
+  email     String?  @unique
+  phone     String?
+  debts     Debt[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Debt {
+  id          Int        @id @default(autoincrement())
+  amount      Float
+  description String
+  status      DebtStatus @default(PENDING)
+  comercioId  Int
+  comercio    User       @relation(fields: [comercioId], references: [id])
+  clientId    Int
+  client      Client     @relation(fields: [clientId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum Role {
+  ADMIN
+  COMERCIO
+}
+
+enum DebtStatus {
+  PENDING
+  PAID
+}
