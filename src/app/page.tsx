@@ -17,7 +17,7 @@ export default async function Home() {
   return (
     <div className="flex flex-col justify-center items-center h-screen bg-gray-100">
       <div className="p-8 bg-white shadow-md rounded-lg text-center">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">Bienvenido a Veraz</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">Bienvenido a Veraz Cruz del Eje</h1>
         <p className="mb-8 text-gray-600">Por favor, inicia sesión para continuar.</p>
         <Link href="/login" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
           

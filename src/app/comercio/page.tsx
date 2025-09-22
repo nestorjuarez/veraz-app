@@ -89,16 +89,16 @@ export default function ComercioPage() {
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleSuccess}
       />
-      <div className="container mx-auto p-8">
-        <div className="flex justify-between items-center mb-6">
+      <div className="container mx-auto p-4 sm:p-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold">Panel de Comercio</h1>
             <p className="text-gray-600">Bienvenido, {session?.user?.name}</p>
           </div>
-          <div>
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4"
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
               Registrar Deuda
             </button>
@@ -114,7 +114,7 @@ export default function ComercioPage() {
         {/* --- Sección de Búsqueda --- */}
         <div className="mb-8 p-6 bg-white shadow-md rounded-lg">
           <h2 className="text-2xl font-bold mb-4">Consultar Deudor por DNI</h2>
-          <form onSubmit={handleSearch} className="flex gap-4">
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
             <input
               type="text"
               value={searchDni}

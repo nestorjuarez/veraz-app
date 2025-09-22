@@ -55,8 +55,8 @@ export default function AddDebtModal({ isOpen, onClose, onSuccess }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-lg">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-2xl w-full max-w-lg">
         <h2 className="text-2xl font-bold mb-6">Registrar Nueva Deuda</h2>
         <form onSubmit={handleSubmit}>
           {error && <p className="text-red-500 mb-4">{error}</p>}

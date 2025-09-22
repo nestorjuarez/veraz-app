@@ -56,14 +56,14 @@ export default function AdminPage() {
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto p-4 sm:p-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-bold">Panel de Administrador</h1>
           <p className="text-gray-600">Bienvenido, {session?.user?.name}</p>
         </div>
-        <div>
-          <Link href="/admin/new" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/new" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-center">
             Crear Usuario
           </Link>
           <button
