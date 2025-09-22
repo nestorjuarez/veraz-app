@@ -8,16 +8,18 @@ interface Props {
   onSuccess: () => void;
 }
 
+const initialState = {
+  dni: '',
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  amount: '',
+  description: '',
+};
+
 export default function AddDebtModal({ isOpen, onClose, onSuccess }: Props) {
-  const [formData, setFormData] = useState({
-    dni: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    amount: '',
-    description: '',
-  });
+  const [formData, setFormData] = useState(initialState);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -42,6 +44,7 @@ export default function AddDebtModal({ isOpen, onClose, onSuccess }: Props) {
         throw new Error(errorMessage || 'No se pudo registrar la deuda.');
       }
       onSuccess();
+      setFormData(initialState); // Limpiar el formulario
     } catch (err: any) {
       setError(err.message);
     } finally {

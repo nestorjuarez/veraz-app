@@ -10,6 +10,7 @@ interface Debt {
   description: string;
   status: 'PENDING' | 'PAID';
   createdAt: string;
+  comercio?: { name: string };
 }
 
 interface Client {
@@ -28,6 +29,12 @@ export default function ComercioPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Estados para la búsqueda
+  const [searchDni, setSearchDni] = useState('');
+  const [searchResult, setSearchResult] = useState<Client | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
 
   const fetchClients = () => {
     setLoading(true);
@@ -36,9 +43,7 @@ export default function ComercioPage() {
         if (!res.ok) throw new Error('No se pudieron cargar los clientes.');
         return res.json();
       })
-      .then((data) => {
-        setClients(data);
-      })
+      .then((data) => setClients(data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   };
@@ -46,10 +51,33 @@ export default function ComercioPage() {
   useEffect(() => {
     fetchClients();
   }, []);
+  
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchDni) return;
+
+    setSearchLoading(true);
+    setSearchError('');
+    setSearchResult(null);
+
+    try {
+      const res = await fetch(`/api/clients/${searchDni}`);
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || 'Error en la búsqueda');
+      }
+      const data = await res.json();
+      setSearchResult(data);
+    } catch (err: any) {
+      setSearchError(err.message);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   const handleSuccess = () => {
     setIsModalOpen(false);
-    fetchClients(); // Recargar la lista de clientes
+    fetchClients();
   };
 
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
@@ -83,6 +111,44 @@ export default function ComercioPage() {
           </div>
         </div>
 
+        {/* --- Sección de Búsqueda --- */}
+        <div className="mb-8 p-6 bg-white shadow-md rounded-lg">
+          <h2 className="text-2xl font-bold mb-4">Consultar Deudor por DNI</h2>
+          <form onSubmit={handleSearch} className="flex gap-4">
+            <input
+              type="text"
+              value={searchDni}
+              onChange={(e) => setSearchDni(e.target.value)}
+              placeholder="Ingrese DNI del cliente"
+              className="flex-grow p-2 border rounded"
+            />
+            <button type="submit" disabled={searchLoading} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-green-300">
+              {searchLoading ? 'Buscando...' : 'Buscar'}
+            </button>
+          </form>
+          {searchError && <p className="text-red-500 mt-4">{searchError}</p>}
+          {searchResult && (
+            <div className="mt-6 p-4 border rounded-lg bg-gray-50">
+              <h3 className="text-xl font-semibold">{searchResult.firstName} {searchResult.lastName}</h3>
+              <p><strong>DNI:</strong> {searchResult.dni}</p>
+              <p><strong>Email:</strong> {searchResult.email || 'N/A'}</p>
+              <h4 className="text-lg font-semibold mt-4 mb-2">Historial de Deudas:</h4>
+              <ul className="list-disc pl-5">
+                {searchResult.debts.length > 0 ? (
+                  searchResult.debts.map(debt => (
+                    <li key={debt.id}>
+                      <strong>Comercio:</strong> {debt.comercio?.name} - <strong>Monto:</strong> ${debt.amount.toFixed(2)} - <strong>Estado:</strong> {debt.status}
+                    </li>
+                  ))
+                ) : (
+                  <p>Este cliente no tiene deudas registradas.</p>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+        
+        <h2 className="text-2xl font-bold mb-4">Mis Clientes Deudores</h2>
         {loading ? (
           <div className="text-center">Cargando clientes...</div>
         ) : (
