@@ -65,8 +65,8 @@ export default function AddDebtModal({ isOpen, onClose, onSuccess }: Props) {
             <input name="dni" value={formData.dni} onChange={handleChange} placeholder="DNI *" required className="p-2 border rounded"/>
             <input name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Nombre *" required className="p-2 border rounded"/>
             <input name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Apellido *" required className="p-2 border rounded"/>
-            <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" className="p-2 border rounded"/>
-            <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Teléfono" className="p-2 border rounded col-span-full"/>
+            <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email (Opcional)" className="p-2 border rounded"/>
+            <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Teléfono (Opcional)" className="p-2 border rounded col-span-full"/>
             
             <h3 className="col-span-full font-semibold text-lg mt-4 mb-2">Datos de la Deuda</h3>
             <input name="amount" type="number" value={formData.amount} onChange={handleChange} placeholder="Monto *" required className="p-2 border rounded"/>

@@ -61,8 +61,8 @@ export async function POST(request: Request) {
                 dni,
                 firstName,
                 lastName,
-                email,
-                phone,
+                email: email || null,
+                phone: phone || null,
             },
         });
 

@@ -25,19 +25,19 @@ export async function POST(request: Request) {
         } = body;
         
         if (!dni || !firstName || !lastName || !amount || !description) {
-            return NextResponse.json({ error: 'Todos los campos del cliente y la deuda son requeridos.' }, { status: 400 });
+            return NextResponse.json({ error: 'DNI, nombre, apellido, monto y descripción son requeridos.' }, { status: 400 });
         }
 
         const newDebt = await prisma.$transaction(async (tx) => {
             const client = await tx.client.upsert({
                 where: { dni: dni },
-                update: {}, // No actualizamos nada si ya existe
+                update: {},
                 create: {
                     dni,
                     firstName,
                     lastName,
-                    email,
-                    phone,
+                    email: email || null,
+                    phone: phone || null,
                 },
             });
 
