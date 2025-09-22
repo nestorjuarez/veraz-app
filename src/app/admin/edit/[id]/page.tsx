@@ -70,7 +70,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         throw new Error(errorMessage || 'No se pudo actualizar el usuario.');
       }
 
-      router.push('/admin/users');
+      router.push('/admin');
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -115,7 +115,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         </div>
 
         <div className="flex justify-end gap-4 mt-6">
-          <Link href="/admin/users" className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+          <Link href="/admin" className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
             Cancelar
           </Link>
           <button type="submit" disabled={loading} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-green-300">
