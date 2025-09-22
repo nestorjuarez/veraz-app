@@ -13,8 +13,8 @@
     "seed": "ts-node --compiler-options '{\\\"module\\\": \\\"commonjs\\\"}' prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.16.2",
-    "bcryptjs": "^2.4.3",
+    "@prisma/client": "5.16.2",
+    "bcryptjs": "2.4.3",
     "geist": "^1.5.1",
     "next": "14.2.5",
     "next-auth": "^4.24.11",
