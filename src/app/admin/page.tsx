@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
 
 interface User {
   id: number;
@@ -117,15 +118,15 @@ export default function AdminPage() {
                 <td className="px-5 py-4 border-b border-gray-200 text-sm">
                   {user.cuit || 'N/A'}
                 </td>
-                <td className="px-5 py-4 border-b border-gray-200 text-sm">
-                  <Link href={`/admin/edit/${user.id}`} className="text-indigo-600 hover:text-indigo-900 mr-4">
-                    Editar
+                <td className="px-5 py-4 border-b border-gray-200 text-sm flex items-center gap-4">
+                  <Link href={`/admin/edit/${user.id}`} className="text-indigo-600 hover:text-indigo-900">
+                    <Image src="/pencil.svg" alt="Editar" width={20} height={20} />
                   </Link>
                   <button
                     onClick={() => handleDelete(user.id)}
                     className="text-red-600 hover:text-red-900"
                   >
-                    Eliminar
+                    <Image src="/trash.svg" alt="Eliminar" width={20} height={20} />
                   </button>
                 </td>
               </tr>
