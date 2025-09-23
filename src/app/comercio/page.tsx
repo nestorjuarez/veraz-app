@@ -83,16 +83,15 @@ export default function ComercioPage() {
         fetchClients();
     }, []);
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!searchDni.trim()) return;
+    const searchClientByDni = async (dni: string) => {
+        if (!dni.trim()) return;
 
         setSearchLoading(true);
         setSearchError(null);
         setSearchedClient(null);
 
         try {
-            const res = await fetch(`/api/clients/${searchDni.trim()}`);
+            const res = await fetch(`/api/clients/${dni.trim()}`);
             if (!res.ok) {
                 const { error } = await res.json();
                 throw new Error(error || 'Cliente no encontrado');
@@ -104,6 +103,17 @@ export default function ComercioPage() {
         } finally {
             setSearchLoading(false);
         }
+    };
+
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        searchClientByDni(searchDni);
+    };
+
+    const handleViewHistory = (dni: string) => {
+        setSearchDni(dni);
+        searchClientByDni(dni);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleUpdateDebtStatus = async (debtId: number, status: 'PAID' | 'PARTIAL' | 'PENDING') => {
@@ -171,7 +181,7 @@ export default function ComercioPage() {
                 <main>
                     <div className="mb-8 p-6 bg-gray-800 shadow-xl rounded-2xl">
                         <h2 className="text-xl font-bold mb-4">Consultar Deudor por DNI</h2>
-                        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
+                        <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-4">
                             <input
                                 type="text"
                                 value={searchDni}
@@ -205,8 +215,7 @@ export default function ComercioPage() {
                                                 <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Descripción</th>
                                                 <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Comercio</th>
                                                 <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Estado</th>
-                                                <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Fecha</th>
-                                                <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider rounded-r-lg">Acciones</th>
+                                                <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider rounded-r-lg">Fecha</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-700/50">
@@ -221,47 +230,9 @@ export default function ComercioPage() {
                                                         </span>
                                                     </td>
                                                     <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{new Date(debt.createdAt).toLocaleDateString()}</td>
-                                                    <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
-                                                        {session && parseInt(session.user.id) === debt.comercioId ? (
-                                                            <div className="flex items-center space-x-2">
-                                                                {debt.status !== 'PAID' && (
-                                                                    <button
-                                                                        onClick={() => handleUpdateDebtStatus(debt.id, 'PAID')}
-                                                                        disabled={updateLoading}
-                                                                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md text-xs disabled:opacity-50 transition-colors"
-                                                                        title="Marcar como Pagado"
-                                                                    >
-                                                                        Pagado
-                                                                    </button>
-                                                                )}
-                                                                {debt.status === 'PENDING' && (
-                                                                    <button
-                                                                        onClick={() => handleUpdateDebtStatus(debt.id, 'PARTIAL')}
-                                                                        disabled={updateLoading}
-                                                                        className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded-md text-xs disabled:opacity-50 transition-colors"
-                                                                        title="Marcar como Parcial"
-                                                                    >
-                                                                        Parcial
-                                                                    </button>
-                                                                )}
-                                                                {(debt.status === 'PAID' || debt.status === 'PARTIAL') && (
-                                                                    <button
-                                                                        onClick={() => handleUpdateDebtStatus(debt.id, 'PENDING')}
-                                                                        disabled={updateLoading}
-                                                                        className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded-md text-xs disabled:opacity-50 transition-colors"
-                                                                        title="Marcar como Pendiente"
-                                                                    >
-                                                                        Pendiente
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                        ) : (
-                                                            <span>-</span>
-                                                        )}
-                                                     </td>
-                                                 </tr>
-                                             ))}
-                                         </tbody>
+                                                </tr>
+                                            ))}
+                                        </tbody>
                                     </table>
                                 </div>
                             ) : (
@@ -279,7 +250,8 @@ export default function ComercioPage() {
                                         <th className="py-3 px-5 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider rounded-l-lg">Nombre</th>
                                         <th className="py-3 px-5 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">DNI</th>
                                         <th className="py-3 px-5 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Deuda Total</th>
-                                        <th className="py-3 px-5 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider rounded-r-lg">Deudas Activas</th>
+                                        <th className="py-3 px-5 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Deudas Activas</th>
+                                        <th className="py-3 px-5 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider rounded-r-lg">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-700/50">
@@ -296,6 +268,14 @@ export default function ComercioPage() {
                                             </td>
                                             <td className="py-4 px-5">
                                                 <p className="text-gray-300 whitespace-no-wrap">{client.activeDebts}</p>
+                                            </td>
+                                            <td className="py-4 px-5 text-center">
+                                                <button
+                                                    onClick={() => handleViewHistory(client.dni)}
+                                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-colors"
+                                                >
+                                                    Ver Historial
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
