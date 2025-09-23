@@ -43,7 +43,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             return NextResponse.json({ error: 'Deuda no encontrada' }, { status: 404 });
         }
 
-        if (debt.commerceId !== commerceId) {
+        if (debt.comercioId !== commerceId) {
             return NextResponse.json({ error: 'No autorizado para modificar esta deuda' }, { status: 403 });
         }
 
