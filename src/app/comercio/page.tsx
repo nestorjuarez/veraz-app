@@ -5,182 +5,308 @@ import { signOut, useSession } from 'next-auth/react';
 import AddDebtModal from '@/app/components/AddDebtModal';
 
 interface Debt {
-  id: number;
-  amount: number;
-  description: string;
-  status: 'PENDING' | 'PAID';
-  createdAt: string;
-  comercio?: { name: string };
+    id: number;
+    amount: number;
+    description: string;
+    status: 'PENDING' | 'PAID' | 'PARTIAL';
+    createdAt: string;
+    comercioId: number;
+    comercio: {
+       name: string;
+    };
 }
 
 interface Client {
-  id: number;
-  dni: string;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-  phone: string | null;
-  debts: Debt[];
+    id: number;
+    dni: string;
+    firstName: string;
+    lastName: string;
+    email: string | null;
+    phone: string | null;
+    debts: Debt[];
 }
 
+interface ClientWithDebts extends Client {
+    totalDebt: number;
+    activeDebts: number;
+}
+
+const statusMap: { [key in 'PENDING' | 'PAID' | 'PARTIAL']: string } = {
+    PENDING: 'Pendiente',
+    PAID: 'Pagado',
+    PARTIAL: 'Parcial',
+};
+
+const statusColors: { [key in 'PENDING' | 'PAID' | 'PARTIAL']: string } = {
+    PENDING: 'bg-red-500/20 text-red-300',
+    PAID: 'bg-green-500/20 text-green-300',
+    PARTIAL: 'bg-yellow-500/20 text-yellow-300',
+};
+
+
 export default function ComercioPage() {
-  const { data: session } = useSession();
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Estados para la búsqueda
-  const [searchDni, setSearchDni] = useState('');
-  const [searchResult, setSearchResult] = useState<Client | null>(null);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState('');
+    const { data: session } = useSession();
+    const [clients, setClients] = useState<ClientWithDebts[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchClients = () => {
-    setLoading(true);
-    fetch('/api/clients')
-      .then((res) => {
-        if (!res.ok) throw new Error('No se pudieron cargar los clientes.');
-        return res.json();
-      })
-      .then((data) => setClients(data))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  };
+    // Search states
+    const [searchDni, setSearchDni] = useState('');
+    const [searchedClient, setSearchedClient] = useState<ClientWithDebts | null>(null);
+    const [searchError, setSearchError] = useState<string | null>(null);
+    const [searchLoading, setSearchLoading] = useState(false);
 
-  useEffect(() => {
-    fetchClients();
-  }, []);
-  
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchDni) return;
+    // Update states
+    const [updateLoading, setUpdateLoading] = useState(false);
+    const [updateError, setUpdateError] = useState<string | null>(null);
 
-    setSearchLoading(true);
-    setSearchError('');
-    setSearchResult(null);
+    const fetchClients = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/clients');
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'No se pudieron cargar los clientes.');
+            }
+            const data = await res.json();
+            setClients(data);
+            setError(null);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    try {
-      const res = await fetch(`/api/clients/${searchDni}`);
-      if (!res.ok) {
-        const { error } = await res.json();
-        throw new Error(error || 'Error en la búsqueda');
-      }
-      const data = await res.json();
-      setSearchResult(data);
-    } catch (err: any) {
-      setSearchError(err.message);
-    } finally {
-      setSearchLoading(false);
+    useEffect(() => {
+        fetchClients();
+    }, []);
+
+    const handleSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!searchDni.trim()) return;
+
+        setSearchLoading(true);
+        setSearchError(null);
+        setSearchedClient(null);
+
+        try {
+            const res = await fetch(`/api/clients/${searchDni.trim()}`);
+            if (!res.ok) {
+                const { error } = await res.json();
+                throw new Error(error || 'Cliente no encontrado');
+            }
+            const data = await res.json();
+            setSearchedClient(data);
+        } catch (err: any) {
+            setSearchError(err.message);
+        } finally {
+            setSearchLoading(false);
+        }
+    };
+
+    const handleUpdateDebtStatus = async (debtId: number, status: 'PAID' | 'PARTIAL' | 'PENDING') => {
+        setUpdateLoading(true);
+        setUpdateError(null);
+        try {
+            const res = await fetch(`/api/debts/${debtId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Error al actualizar el estado de la deuda');
+            }
+
+            await fetchClients();
+
+            if (searchedClient) {
+                const res = await fetch(`/api/clients/${searchedClient.dni}`);
+                const data = await res.json();
+                setSearchedClient(data);
+            }
+
+        } catch (err: any) {
+            setUpdateError(err.message);
+        } finally {
+            setUpdateLoading(false);
+        }
+    };
+    
+    if (loading && clients.length === 0) {
+        return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Cargando clientes...</div>;
     }
-  };
 
-  const handleSuccess = () => {
-    setIsModalOpen(false);
-    fetchClients();
-  };
+    if (error) {
+        return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-red-500">{error}</div>;
+    }
 
-  if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
+    return (
+        <div className="min-h-screen bg-gray-900 text-white">
+            <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold">Panel de Comercio</h1>
+                        <p className="text-gray-400">Bienvenido, {session?.user?.name || 'Comerciante'}</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                        >
+                            + Registrar Deuda
+                        </button>
+                        <button
+                            onClick={() => signOut({ callbackUrl: '/login' })}
+                            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                        >
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                </header>
 
-  return (
-    <>
-      <AddDebtModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={handleSuccess}
-      />
-      <div className="container mx-auto p-4 sm:p-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Panel de Comercio</h1>
-            <p className="text-gray-600">Bienvenido, {session?.user?.name}</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Registrar Deuda
-            </button>
-            <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Cerrar Sesión
-            </button>
-          </div>
-        </div>
+                <main>
+                    <div className="mb-8 p-6 bg-gray-800 shadow-xl rounded-2xl">
+                        <h2 className="text-xl font-bold mb-4">Consultar Deudor por DNI</h2>
+                        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
+                            <input
+                                type="text"
+                                value={searchDni}
+                                onChange={(e) => setSearchDni(e.target.value)}
+                                placeholder="Ingrese DNI del cliente para ver su historial"
+                                className="flex-grow p-3 border border-gray-700 bg-gray-900 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <button type="submit" disabled={searchLoading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50 transition-colors">
+                                {searchLoading ? 'Buscando...' : 'Buscar'}
+                            </button>
+                        </form>
+                        {searchError && <p className="text-red-400 mt-4 text-center">{searchError}</p>}
+                        {updateError && <p className="text-red-400 mt-4 text-center">{updateError}</p>}
+                    </div>
 
-        {/* --- Sección de Búsqueda --- */}
-        <div className="mb-8 p-6 bg-white shadow-md rounded-lg">
-          <h2 className="text-2xl font-bold mb-4">Consultar Deudor por DNI</h2>
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
-            <input
-              type="text"
-              value={searchDni}
-              onChange={(e) => setSearchDni(e.target.value)}
-              placeholder="Ingrese DNI del cliente"
-              className="flex-grow p-2 border rounded"
-            />
-            <button type="submit" disabled={searchLoading} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-green-300">
-              {searchLoading ? 'Buscando...' : 'Buscar'}
-            </button>
-          </form>
-          {searchError && <p className="text-red-500 mt-4">{searchError}</p>}
-          {searchResult && (
-            <div className="mt-6 p-4 border rounded-lg bg-gray-50">
-              <h3 className="text-xl font-semibold">{searchResult.firstName} {searchResult.lastName}</h3>
-              <p><strong>DNI:</strong> {searchResult.dni}</p>
-              <p><strong>Email:</strong> {searchResult.email || 'N/A'}</p>
-              <h4 className="text-lg font-semibold mt-4 mb-2">Historial de Deudas:</h4>
-              <ul className="list-disc pl-5">
-                {searchResult.debts.length > 0 ? (
-                  searchResult.debts.map(debt => (
-                    <li key={debt.id}>
-                      <strong>Comercio:</strong> {debt.comercio?.name} - <strong>Monto:</strong> ${debt.amount.toFixed(2)} - <strong>Estado:</strong> {debt.status}
-                    </li>
-                  ))
-                ) : (
-                  <p>Este cliente no tiene deudas registradas.</p>
-                )}
-              </ul>
+                    {searchedClient && (
+                        <div className="mb-8 bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-xl">
+                            <h3 className="text-2xl font-semibold">{searchedClient.firstName} {searchedClient.lastName}</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 mb-4 text-gray-400">
+                                <p><strong>DNI:</strong> {searchedClient.dni}</p>
+                                <p><strong>Email:</strong> {searchedClient.email || 'N/A'}</p>
+                                <p><strong>Teléfono:</strong> {searchedClient.phone || 'N/A'}</p>
+                            </div>
+                            <h4 className="text-xl font-semibold mt-6 mb-4">Historial de Deudas</h4>
+                            {searchedClient.debts.length > 0 ? (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full leading-normal">
+                                        <thead>
+                                            <tr>
+                                                <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider rounded-l-lg">Monto</th>
+                                                <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Descripción</th>
+                                                <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Comercio</th>
+                                                <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Estado</th>
+                                                <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Fecha</th>
+                                                <th className="py-3 px-4 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider rounded-r-lg">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-700/50">
+                                            {searchedClient.debts.map(debt => (
+                                                <tr key={debt.id}>
+                                                    <td className="py-4 px-4 whitespace-nowrap text-sm font-medium text-white">${debt.amount.toFixed(2)}</td>
+                                                    <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{debt.description}</td>
+                                                    <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{debt.comercio.name}</td>
+                                                    <td className="py-4 px-4 whitespace-nowrap text-sm">
+                                                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[debt.status]}`}>
+                                                            {statusMap[debt.status]}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">{new Date(debt.createdAt).toLocaleDateString()}</td>
+                                                    <td className="py-4 px-4 whitespace-nowrap text-sm text-gray-300">
+                                                        {session && parseInt(session.user.id) === debt.comercioId ? (
+                                                            <div className="flex items-center space-x-2">
+                                                                {debt.status !== 'PAID' && (
+                                                                    <button
+                                                                        onClick={() => handleUpdateDebtStatus(debt.id, 'PAID')}
+                                                                        disabled={updateLoading}
+                                                                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md text-xs disabled:opacity-50 transition-colors"
+                                                                        title="Marcar como Pagado"
+                                                                    >
+                                                                        Pagado
+                                                                    </button>
+                                                                )}
+                                                                {debt.status === 'PENDING' && (
+                                                                    <button
+                                                                        onClick={() => handleUpdateDebtStatus(debt.id, 'PARTIAL')}
+                                                                        disabled={updateLoading}
+                                                                        className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded-md text-xs disabled:opacity-50 transition-colors"
+                                                                        title="Marcar como Parcial"
+                                                                    >
+                                                                        Parcial
+                                                                    </button>
+                                                                )}
+                                                                {(debt.status === 'PAID' || debt.status === 'PARTIAL') && (
+                                                                    <button
+                                                                        onClick={() => handleUpdateDebtStatus(debt.id, 'PENDING')}
+                                                                        disabled={updateLoading}
+                                                                        className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded-md text-xs disabled:opacity-50 transition-colors"
+                                                                        title="Marcar como Pendiente"
+                                                                    >
+                                                                        Pendiente
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <span>-</span>
+                                                        )}
+                                                     </td>
+                                                 </tr>
+                                             ))}
+                                         </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <p className="mt-4 text-center text-gray-400">Este cliente no tiene deudas registradas.</p>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="overflow-x-auto mt-8 bg-gray-800 shadow-xl rounded-2xl p-6">
+                        <h2 className="text-xl font-bold mb-4">Mis Clientes Deudores</h2>
+                        <div className="inline-block min-w-full overflow-hidden">
+                            <table className="min-w-full leading-normal">
+                                <thead>
+                                    <tr>
+                                        <th className="py-3 px-5 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider rounded-l-lg">Nombre</th>
+                                        <th className="py-3 px-5 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">DNI</th>
+                                        <th className="py-3 px-5 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Deuda Total</th>
+                                        <th className="py-3 px-5 bg-gray-700/50 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider rounded-r-lg">Deudas Activas</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-700/50">
+                                    {clients.map(client => (
+                                        <tr key={client.id} className="hover:bg-gray-700/50">
+                                            <td className="py-4 px-5">
+                                                <p className="text-white whitespace-no-wrap">{client.firstName} {client.lastName}</p>
+                                            </td>
+                                            <td className="py-4 px-5">
+                                                <p className="text-gray-300 whitespace-no-wrap">{client.dni}</p>
+                                            </td>
+                                            <td className="py-4 px-5">
+                                                <p className="text-red-400 font-semibold whitespace-no-wrap">${(client.totalDebt || 0).toFixed(2)}</p>
+                                            </td>
+                                            <td className="py-4 px-5">
+                                                <p className="text-gray-300 whitespace-no-wrap">{client.activeDebts}</p>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </main>
             </div>
-          )}
+            
+            <AddDebtModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={fetchClients} />
         </div>
-        
-        <h2 className="text-2xl font-bold mb-4">Mis Clientes Deudores</h2>
-        {loading ? (
-          <div className="text-center">Cargando clientes...</div>
-        ) : (
-          <div className="bg-white shadow-md rounded-lg overflow-x-auto">
-            <table className="min-w-full leading-normal">
-              <thead>
-                <tr>
-                  <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cliente</th>
-                  <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">DNI</th>
-                  <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Adeudado</th>
-                  <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Deudas Activas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clients.map((client) => {
-                  const pendingDebts = client.debts.filter(d => d.status === 'PENDING');
-                  const totalDebt = pendingDebts.reduce((acc, debt) => acc + debt.amount, 0);
-                  
-                  return (
-                    <tr key={client.id} className="hover:bg-gray-50">
-                      <td className="px-5 py-4 border-b border-gray-200 text-sm">{client.firstName} {client.lastName}</td>
-                      <td className="px-5 py-4 border-b border-gray-200 text-sm">{client.dni}</td>
-                      <td className="px-5 py-4 border-b border-gray-200 text-sm font-semibold">${totalDebt.toFixed(2)}</td>
-                      <td className="px-5 py-4 border-b border-gray-200 text-sm">{pendingDebts.length}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </>
-  );
+    );
 }

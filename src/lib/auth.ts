@@ -21,21 +21,21 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
-          return null; // Si no hay usuario, no seguimos
+          return null;
         }
         
         const passwordMatch = await bcrypt.compare(credentials.password, user.password);
         
-        if (user && passwordMatch) {
+        if (passwordMatch) {
           return {
             id: user.id.toString(),
             name: user.name,
             email: user.email,
             role: user.role,
           };
-        } else {
-          return null;
         }
+        
+        return null;
       },
     }),
   ],

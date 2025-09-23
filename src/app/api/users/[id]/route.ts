@@ -18,8 +18,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 
     try {
+        const userId = parseInt(params.id, 10);
+        if (isNaN(userId)) {
+            return NextResponse.json({ error: 'ID de usuario no válido' }, { status: 400 });
+        }
+
         const user = await prisma.user.findUnique({
-            where: { id: parseInt(params.id) },
+            where: { id: userId },
             select: { id: true, name: true, email: true, role: true, cuit: true },
         });
 
@@ -38,6 +43,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     try {
+        const userId = parseInt(params.id, 10);
+        if (isNaN(userId)) {
+            return NextResponse.json({ error: 'ID de usuario no válido' }, { status: 400 });
+        }
+
         const body = await request.json();
         const { name, email, role, cuit, password } = body;
 
@@ -48,7 +58,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         }
 
         const updatedUser = await prisma.user.update({
-            where: { id: parseInt(params.id) },
+            where: { id: userId },
             data: dataToUpdate,
         });
 
@@ -65,8 +75,13 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     }
 
     try {
+        const userId = parseInt(params.id, 10);
+        if (isNaN(userId)) {
+            return NextResponse.json({ error: 'ID de usuario no válido' }, { status: 400 });
+        }
+
         await prisma.user.delete({
-            where: { id: parseInt(params.id) },
+            where: { id: userId },
         });
         return new NextResponse(null, { status: 204 });
     } catch (error) {

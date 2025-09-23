@@ -55,4 +55,5 @@ enum Role {
 enum DebtStatus {
   PENDING
   PAID
+  PARTIAL
 }

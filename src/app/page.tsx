@@ -1,30 +1,34 @@
-import { getServerSession } from 'next-auth';
-import { redirect } from 'next/navigation';
-import { authOptions } from '@/lib/auth';
-import Link from 'next/link';
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
+import Link from "next/link";
+import Image from "next/image";
+import styles from './home.module.css';
+import { redirect } from "next/navigation";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions)
 
-  if (session) {
-    if (session.user.role === 'ADMIN') {
-      redirect('/admin');
-    } else if (session.user.role === 'COMERCIO') {
-      redirect('/comercio');
-    }
+  if (session?.user?.role === 'ADMIN') {
+    redirect('/admin')
+  } else if (session?.user?.role === 'COMERCIO') {
+    redirect('/comercio')
   }
 
   return (
-    <div className="flex flex-col justify-center items-center h-screen bg-gray-100">
-      <div className="p-8 bg-white shadow-md rounded-lg text-center">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">Bienvenido a Veraz Cruz del Eje</h1>
-        <p className="mb-8 text-gray-600">Por favor, inicia sesión para continuar.</p>
-        <Link href="/login" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-          
-            Ir a Iniciar Sesión
-          
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white p-8">
+      <div className="text-center flex flex-col items-center">
+        <Image src="/deudores.png" alt="Veraz Logo" width={180} height={180} className="mb-8" />
+        <h1 className={`text-4xl md:text-5xl font-bold mb-4 ${styles.textShadow}`}>Bienvenido a Veraz Cruz del Eje</h1>
+        <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl">
+          La plataforma para la gestión eficiente de deudas comerciales. Inicia sesión para acceder a tu panel.
+        </p>
+        <Link 
+          href="/login" 
+          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-full text-lg font-bold transition-all duration-300 ease-in-out transform hover:scale-105"
+        >
+          Iniciar Sesión
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

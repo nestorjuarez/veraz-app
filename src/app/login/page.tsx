@@ -1,8 +1,6 @@
 'use client';
-
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 export default function LoginPage() {
@@ -10,73 +8,82 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    const result = await signIn('credentials', {
-      redirect: false,
-      email,
-      password,
-    });
-    
-    setLoading(false);
-    if (result?.error) {
-      setError('Credenciales inválidas. Por favor, inténtalo de nuevo.');
-    } else if (result?.ok) {
-        router.push('/');
-        router.refresh();
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (result?.error) {
+        setError('Credenciales inválidas. Por favor, inténtalo de nuevo.');
+      } else if (result?.ok) {
+        window.location.href = '/';
+      }
+    } catch (err: any) {
+      setError('Ha ocurrido un error inesperado.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-slate-50 p-4">
-      <div className="p-8 sm:p-10 bg-white shadow-xl rounded-2xl w-full max-w-md">
-        <div className="flex justify-center mb-4">
-            <Image src="/deudores.png" alt="Logo Deudores" width={100} height={100} />
+    <div className="min-h-screen bg-gray-900 flex flex-col justify-center items-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="flex justify-center mb-6">
+            <Image src="/deudores.png" alt="Deudores Logo" width={120} height={120} />
         </div>
-        <h1 className="text-3xl font-bold mb-6 text-center text-slate-800">Iniciar Sesión</h1>
-        <form onSubmit={handleSubmit}>
-          {error && <p className="bg-red-100 text-red-700 p-3 mb-4 rounded-md text-sm">{error}</p>}
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="border rounded-md w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex items-center justify-between">
+        
+        <div className="bg-gray-800 shadow-xl rounded-2xl p-8">
+          <h1 className="text-3xl font-bold text-center text-white mb-6">Iniciar Sesión</h1>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && <p className="bg-red-500/20 border border-red-500 text-red-300 p-3 rounded-lg text-center text-sm">{error}</p>}
+            
+            <div>
+              <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="email">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                placeholder="tu@email.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="password">
+                Contraseña
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                placeholder="••••••••"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-slate-300 w-full disabled:bg-slate-400"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg disabled:opacity-50 transition-all duration-300 ease-in-out transform hover:scale-105"
             >
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

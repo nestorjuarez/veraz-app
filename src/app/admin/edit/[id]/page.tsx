@@ -21,7 +21,6 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     if (userId) {
-      setLoadingInitialData(true);
       fetch(`/api/users/${userId}`)
         .then(res => {
           if (!res.ok) throw new Error('No se pudo cargar la información del usuario.');
@@ -42,10 +41,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   }, [userId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +67,6 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       }
 
       router.push('/admin');
-      router.refresh();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -79,50 +74,57 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     }
   };
 
-  if (loadingInitialData) return <div className="p-8 text-center">Cargando datos del usuario...</div>;
+  if (loadingInitialData) {
+    return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Cargando datos del usuario...</div>;
+  }
 
   return (
-    <div className="container mx-auto p-8 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-6">Editar Usuario</h1>
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2" htmlFor="name">Nombre</label>
-          <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg"/>
-        </div>
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+      <div className="container mx-auto max-w-lg">
+        <div className="bg-gray-800 p-8 rounded-2xl shadow-xl">
+          <h1 className="text-3xl font-bold mb-6 text-center">Editar Usuario</h1>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && <p className="bg-red-500/20 border border-red-500 text-red-300 p-3 rounded-lg text-center text-sm">{error}</p>}
+            
+            <div>
+              <label className="block text-gray-400 font-bold mb-2" htmlFor="name">Nombre</label>
+              <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2" htmlFor="email">Email</label>
-          <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg"/>
-        </div>
+            <div>
+              <label className="block text-gray-400 font-bold mb-2" htmlFor="email">Email</label>
+              <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2" htmlFor="password">Nueva Contraseña (dejar en blanco para no cambiar)</label>
-          <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg"/>
-        </div>
+            <div>
+              <label className="block text-gray-400 font-bold mb-2" htmlFor="password">Nueva Contraseña (dejar en blanco para no cambiar)</label>
+              <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2" htmlFor="role">Rol</label>
-          <select id="role" name="role" value={formData.role} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg bg-white">
-            <option value="COMERCIO">COMERCIO</option>
-            <option value="ADMIN">ADMIN</option>
-          </select>
-        </div>
+            <div>
+              <label className="block text-gray-400 font-bold mb-2" htmlFor="role">Rol</label>
+              <select id="role" name="role" value={formData.role} onChange={handleChange} required className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="COMERCIO">COMERCIO</option>
+                <option value="ADMIN">ADMIN</option>
+              </select>
+            </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2" htmlFor="cuit">CUIT (Opcional)</label>
-          <input type="text" id="cuit" name="cuit" value={formData.cuit} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg"/>
-        </div>
+            <div>
+              <label className="block text-gray-400 font-bold mb-2" htmlFor="cuit">CUIT (Opcional)</label>
+              <input type="text" id="cuit" name="cuit" value={formData.cuit} onChange={handleChange} className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
 
-        <div className="flex justify-end gap-4 mt-6">
-          <Link href="/admin" className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-            Cancelar
-          </Link>
-          <button type="submit" disabled={loading} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-green-300">
-            {loading ? 'Guardando...' : 'Guardar Cambios'}
-          </button>
+            <div className="flex justify-end gap-4 pt-4">
+              <Link href="/admin" className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                Cancelar
+              </Link>
+              <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 transition-colors">
+                {loading ? 'Guardando...' : 'Guardar Cambios'}
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

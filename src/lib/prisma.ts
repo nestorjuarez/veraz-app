@@ -6,7 +6,19 @@ import { PrismaClient } from '@prisma/client';
 // Learn more: https://pris.ly/d/help/next-js-best-practices
 
 const prismaClientSingleton = () => {
-  return new PrismaClient();
+  const databaseUrl = process.env.OVERRIDE_DATABASE_URL || process.env.DATABASE_URL;
+  
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL or OVERRIDE_DATABASE_URL is not set");
+  }
+
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: databaseUrl,
+      },
+    },
+  });
 };
 
 type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;

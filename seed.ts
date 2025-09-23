@@ -5,14 +5,19 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log(`Comenzando el sembrado de datos...`);
+  console.log('Comenzando el sembrado de datos...');
 
   const adminEmail = 'admin@veraz.com';
-  let admin = await prisma.user.findUnique({
+  const comercioEmail = 'comercio@veraz.com';
+
+  // Forzar reconstrucción en Vercel
+  
+  // Crear o actualizar usuario Admin
+  const adminUser = await prisma.user.findUnique({
     where: { email: adminEmail },
   });
 
-  if (!admin) {
+  if (!adminUser) {
     const hashedPassword = await bcrypt.hash('admin2300', 10);
     admin = await prisma.user.create({
       data: {
@@ -24,11 +29,15 @@ async function main() {
     });
     console.log(`Usuario administrador creado: ${admin.email}`);
   } else {
-    console.log(`El usuario administrador ya existe.`);
+    const hashedPassword = await bcrypt.hash('admin2300', 10);
+    await prisma.user.update({
+      where: { email: adminEmail },
+      data: { password: hashedPassword },
+    });
+    console.log(`La contraseña del administrador ha sido actualizada.`);
   }
 
-  const comercioEmail = 'comercio@veraz.com';
-  let comercio = await prisma.user.findUnique({
+  const comercio = await prisma.user.findUnique({
     where: { email: comercioEmail },
   });
 
@@ -45,7 +54,12 @@ async function main() {
     });
     console.log(`Usuario de comercio creado: ${comercio.email}`);
   } else {
-    console.log(`El usuario de comercio ya existe.`);
+    const hashedPassword = await bcrypt.hash('comercio2300', 10);
+    await prisma.user.update({
+      where: { email: comercioEmail },
+      data: { password: hashedPassword },
+    });
+    console.log(`La contraseña del usuario de comercio ha sido actualizada.`);
   }
 
   console.log(`Sembrado de datos finalizado.`);
