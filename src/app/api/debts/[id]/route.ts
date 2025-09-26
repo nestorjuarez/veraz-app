@@ -9,7 +9,7 @@ async function getCommerceId() {
     if (!session || !session.user || session.user.role !== 'COMERCIO') {
         return null;
     }
-    return session.user.id;
+    return parseInt(session.user.id, 10);
 }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {

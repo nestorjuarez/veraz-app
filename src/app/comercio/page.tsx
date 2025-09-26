@@ -145,6 +145,34 @@ export default function ComercioPage() {
             setUpdateLoading(false);
         }
     };
+
+    const handlePayAllDebts = async (dni: string) => {
+        if (!window.confirm('¿Estás seguro de que deseas marcar todas las deudas activas de este cliente como pagadas?')) {
+            return;
+        }
+
+        setUpdateLoading(true);
+        try {
+            const res = await fetch(`/api/clients/${dni}`, {
+                method: 'PUT',
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'No se pudieron actualizar las deudas.');
+            }
+
+            // Recargar datos
+            await fetchClients();
+            if (searchedClient && searchedClient.dni === dni) {
+                await searchClientByDni(dni);
+            }
+        } catch (err: any) {
+            setUpdateError(err.message);
+        } finally {
+            setUpdateLoading(false);
+        }
+    };
     
     if (loading && clients.length === 0) {
         return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Cargando clientes...</div>;
@@ -270,12 +298,23 @@ export default function ComercioPage() {
                                                 <p className="text-gray-300 whitespace-no-wrap">{client.activeDebts}</p>
                                             </td>
                                             <td className="py-4 px-5 text-center">
-                                                <button
-                                                    onClick={() => handleViewHistory(client.dni)}
-                                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-colors"
-                                                >
-                                                    Ver Historial
-                                                </button>
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => handleViewHistory(client.dni)}
+                                                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-colors"
+                                                    >
+                                                        Ver Historial
+                                                    </button>
+                                                    {client.activeDebts > 0 && (
+                                                        <button
+                                                            onClick={() => handlePayAllDebts(client.dni)}
+                                                            disabled={updateLoading}
+                                                            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-colors disabled:opacity-50"
+                                                        >
+                                                            Pagar Deuda
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

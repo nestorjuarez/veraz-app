@@ -24,6 +24,9 @@ export async function GET() {
                 debts: {
                     some: {
                         comercioId: comercioId,
+                        status: {
+                            in: ['PENDING', 'PARTIAL']
+                        }
                     },
                 },
             },

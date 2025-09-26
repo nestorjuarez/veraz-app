@@ -22,6 +22,9 @@ export async function GET(request: Request, { params }: { params: { dni: string 
             where: { dni: params.dni },
             include: {
                 debts: {
+                    where: {
+                        status: { in: ['PENDING', 'PARTIAL'] }
+                    },
                     orderBy: {
                         createdAt: 'desc',
                     },
@@ -53,5 +56,41 @@ export async function GET(request: Request, { params }: { params: { dni: string 
     } catch (error) {
         console.error("Error fetching client by DNI:", error);
         return NextResponse.json({ error: 'Error al buscar el cliente' }, { status: 500 });
+    }
+}
+
+export async function PUT(request: Request, { params }: { params: { dni: string } }) {
+    const comercioId = await getCommerceId();
+    if (!comercioId) {
+        return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+    }
+
+    try {
+        const client = await prisma.client.findUnique({
+            where: { dni: params.dni },
+        });
+
+        if (!client) {
+            return NextResponse.json({ error: 'Cliente no encontrado.' }, { status: 404 });
+        }
+
+        const updateResult = await prisma.debt.updateMany({
+            where: {
+                clientId: client.id,
+                comercioId: comercioId,
+                status: {
+                    in: ['PENDING', 'PARTIAL'],
+                },
+            },
+            data: {
+                status: 'PAID',
+            },
+        });
+
+        return NextResponse.json({ message: `Se actualizaron ${updateResult.count} deudas.` });
+
+    } catch (error) {
+        console.error("Error updating client debts:", error);
+        return NextResponse.json({ error: 'Error al actualizar las deudas del cliente' }, { status: 500 });
     }
 }
